@@ -47,7 +47,7 @@ Tumblr.prototype.init = function () {
 
 };
 
-/*
+
 var postHandler = function (msg) {
     var txt = msg.match_data[2];
     var description = txt.substr(txt.indexOf(0, txt.indexOf('http://') || txt.indexOf('https://')));
@@ -95,4 +95,6 @@ var getPosts = function () {
     request.write('');
     request.end();
 
-};*/
+};
+
+module.exports = Tumblr;
