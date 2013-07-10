@@ -1,5 +1,6 @@
 var NerdieInterface = require('nerdie_interface.js');
 var oauth = require('oauth-client');
+var request = require('request');
 
 var nerdie;
 var enabled = true;
@@ -50,13 +51,70 @@ Tumblr.prototype.init = function () {
 
 var postHandler = function (msg) {
     var txt = msg.match_data[2];
-    var description = txt.substr(txt.indexOf(0, txt.indexOf('http://') || txt.indexOf('https://')));
-    //var image = txt.substr(txt.indexOf());
-    console.log('it works');
+
+    // There needs to be a comment between two "
+    if (txt.split('"').length - 1 !== 2) {
+        msg.say('You will need some "" in there');
+        return;
+    };
+
+    // Take the description between the ""
+    var description = txt.substr(txt.indexOf('"') + 1, txt.lastIndexOf('"') - 1);
+
+    // only if there is a link we'll grab it
+    if (txt.indexOf('htt') !== -1) {
+        var image_url = txt.substr(txt.indexOf('htt'), txt.length);
+    };
+
+    post_data = {
+        description: description,
+        image_url: image_url
+    }
+
+    sendPost(post_data, function() {
+        msg.say('that was somewhat successfull');
+    });
 };
 
-var sendPost = function (post) {
-    // Send post to tumblr.
+var sendPost = function (post, callback) {
+    var api_key = consumer_key;
+
+    var consumer = oauth.createConsumer(consumer_key, consumer_secret);
+    var token = oauth.createToken(oauth_token, oauth_token_secret);
+    var signer = oauth.createHmac(consumer, token);
+
+    var body = {
+        type: 'photo',
+        caption: 'testpost',
+        source: 'http://new.tinygrab.com/5f8c47e63ca44e35446fd148b94181a1f1ca711fef.png'
+    };
+
+    var request = {
+        port: 443,
+        host: 'api.tumblr.com',
+        https: true,
+        path: '/v2/blog/fictivewall.tumblr.com/post?api_key=' + api_key,
+        oauth_signature: signer,
+        method: 'POST',
+        body: body
+    };
+
+    var request = oauth.request(request, function(response) {
+        response.setEncoding('utf8');
+        data = '';
+        response.on('data', function (chunk) {
+            data += chunk;
+            console.log(data);
+        });
+        response.on('end', function() {
+            console.log(JSON.parse(data));
+        });
+    });
+
+    request.write('');
+    request.end();
+
+    callback();
 };
 
 var checkPosts  = function () {
